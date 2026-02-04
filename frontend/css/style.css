@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+body {
+    background: linear-gradient(135deg, #f0fdf4 0%, #e6f7ff 100%);
+    font-family: 'Outfit', sans-serif;
+    color: #333;
+    min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 15px 0;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: #166534 !important;
+    font-size: 1.5rem;
+}
+
+.nav-link {
+    color: #4b5563 !important;
+    font-weight: 500;
+    margin-left: 20px;
+    transition: color 0.3s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: #166534 !important;
+}
+
+/* Header (Adjusted for Navbar) */
+.header {
+    background: linear-gradient(90deg, #166534 0%, #15803d 100%);
+    color: white;
+    padding: 60px 20px 40px;
+    /* More top padding */
+    margin-bottom: 30px;
+    border-radius: 0 0 30px 30px;
+    box-shadow: 0 4px 20px rgba(22, 101, 52, 0.2);
+}
+
+.header h2 {
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+/* Card Styling */
+.card {
+    border: none;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Form Elements */
+.input-group-text {
+    background-color: #f0fdf4;
+    border: 1px solid #ced4da;
+    color: #166534;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #166534 0%, #22c55e 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #14532d 0%, #16a34a 100%);
+    transform: scale(1.05);
+}
+
+.score-card {
+    border-left: 6px solid #22c55e;
+    background: white;
+}
+
+.score-card i {
+    opacity: 0.8;
+}
+
+/* Custom Range Slider */
+.form-range::-webkit-slider-thumb {
+    background: #166534;
+}
+
+.main-content {
+    max-width: 900px;
+    min-height: 60vh;
+    /* Push footer down */
+}
+
+/* Footer */
+footer {
+    background: #166534;
+    color: white;
+    padding: 40px 0 20px;
+    margin-top: 50px;
+}
+
+footer a {
+    color: #a7f3d0;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header {
+        padding: 40px 20px 30px;
+        border-radius: 0 0 20px 20px;
+    }
+
+    .header h2 {
+        font-size: 1.8rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.3rem;
+    }
+
+    .card-body {
+        padding: 1.5rem 1rem;
+    }
+
+    .btn-lg {
+        width: 100%;
+    }
+}

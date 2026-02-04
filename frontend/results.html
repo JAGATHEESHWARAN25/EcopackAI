@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>EcoPackAI | Recommendation Results</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html"><i class="fas fa-leaf"></i> EcoPackAI</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Analytics Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="header text-center mt-5">
+        <br>
+        <h2>EcoPackAI</h2>
+        <p>AI-Generated Sustainable Packaging Recommendations</p>
+    </div>
+
+    <div class="container mt-4">
+
+        <!-- SUMMARY CARDS -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card score-card p-3 shadow-sm">
+                    <h6>Best Sustainability Choice</h6>
+                    <h5 class="text-success">Recycled Cardboard</h5>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card score-card p-3 shadow-sm">
+                    <h6>Estimated CO₂ Reduction</h6>
+                    <h5 class="text-success">↓ 30%</h5>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card score-card p-3 shadow-sm">
+                    <h6>Estimated Cost Savings</h6>
+                    <h5 class="text-success">↓ 15%</h5>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTS TABLE -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success">Top Recommended Materials</h5>
+
+                <table class="table table-bordered table-hover">
+                    <thead class="table-success">
+                        <tr>
+                            <th>Rank</th>
+                            <th>Material</th>
+                            <th>Predicted Cost (INR)</th>
+                            <th>Predicted CO₂ (kg)</th>
+                            <th>Bio</th>
+                            <th>Recycle</th>
+                            <th>Score</th>
+                            <th>Effectiveness</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Recycled Cardboard</td>
+                            <td>18.40</td>
+                            <td>0.042</td>
+                            <td class="text-success"><strong>Highly Effective</strong></td>
+                        </tr>
+
+                        <tr>
+                            <td>2</td>
+                            <td>Molded Pulp</td>
+                            <td>20.10</td>
+                            <td>0.048</td>
+                            <td>Sustainable</td>
+                        </tr>
+
+                        <tr>
+                            <td>3</td>
+                            <td>Biodegradable Plastic</td>
+                            <td>17.80</td>
+                            <td>0.061</td>
+                            <td>Cost-Effective</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CHARTS -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm p-3">
+                    <h6 class="text-center text-success">Predicted Cost Comparison (INR)</h6>
+                    <div id="costChart" style="height: 300px;"></div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card shadow-sm p-3">
+                    <h6 class="text-center text-success">Predicted CO₂ Impact Comparison (kg)</h6>
+                    <div id="co2Chart" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW CHARTS: Sustainability Score & Attributes -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm p-3">
+                    <h6 class="text-center text-success">Overall Sustainability Score (0-100)</h6>
+                    <div id="scoreChart" style="height: 300px;"></div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card shadow-sm p-3">
+                    <h6 class="text-center text-success">Eco-Attributes (Bio & Recycle)</h6>
+                    <div id="bioRecycleChart" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXPLANATION -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success">How Recommendations Are Generated</h5>
+                <ul>
+                    <li>Cost is predicted using a Random Forest regression model.</li>
+                    <li>CO₂ impact is predicted using an XGBoost regression model.</li>
+                    <li>Materials are ranked based on sustainability score combining biodegradability, recyclability,
+                        cost, and emissions.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="text-center mb-5">
+            <a href="index.html" class="btn btn-secondary me-2"><i class="fas fa-arrow-left"></i> Modify Inputs</a>
+            <a id="downloadPdfBtn" href="#" class="btn btn-primary me-2"><i class="fas fa-file-pdf"></i> Download
+                Report</a>
+            <a href="dashboard.html" class="btn btn-outline-success"><i class="fas fa-chart-line"></i> View Global
+                Analytics</a>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="text-center">
+        <div class="container">
+            <p>&copy; 2026 EcoPackAI. All Rights Reserved.</p>
+            <p class="small">Powered by AI &bull; Sustainable Future</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- CHART SCRIPT -->
+    <!-- CHART SCRIPT -->
+    <script>
+        // Retrieve data from localStorage
+        const storedData = localStorage.getItem('ecoPackResults');
+
+        if (storedData) {
+            const data = JSON.parse(storedData);
+            const top = data.top_choice;
+            const alts = data.alternatives;
+
+            // Update Summary Cards
+            // Use querySelectorAll to get all cards
+            const cards = document.querySelectorAll('.score-card');
+
+            // Update Summary Cards
+            if (cards[0]) {
+                cards[0].querySelector('h5').innerText = top.material_name;
+            }
+
+            // Calculate Savings compared to the 'worst' (max cost/co2) in the list to simulate 'Reduction %'
+            const maxCost = Math.max(...alts.map(a => a.predicted_cost));
+            const maxCo2 = Math.max(...alts.map(a => a.predicted_co2));
+
+            const costSavings = ((maxCost - top.predicted_cost) / maxCost * 100).toFixed(1);
+            const co2Savings = ((maxCo2 - top.predicted_co2) / maxCo2 * 100).toFixed(1);
+
+            if (cards[1]) {
+                cards[1].querySelector('h5').innerText = '↓ ' + co2Savings + '%';
+                cards[1].querySelector('h6').innerText = `Red. (${top.predicted_co2} kg vs ${maxCo2} kg)`;
+            }
+
+            if (cards[2]) {
+                cards[2].querySelector('h5').innerText = '↓ ' + costSavings + '%';
+                cards[2].querySelector('h6').innerText = `Saving (₹${top.predicted_cost} vs ₹${maxCost})`;
+            }
+
+            // Update Download PDF Button with Request ID (Specific) or Category (Fallback)
+            const pdfBtn = document.getElementById('downloadPdfBtn');
+            if (data.request_id) {
+                const rid = data.request_id;
+                pdfBtn.href = `http://localhost:5000/export/pdf?request_id=${rid}`;
+                pdfBtn.innerHTML = `<i class="fas fa-file-pdf"></i> Download Detailed Report`;
+            } else if (data.input && data.input.category) {
+                // Legacy fallback if no request_id
+                const cat = data.input.category;
+                pdfBtn.href = `http://localhost:5000/export/pdf?category=${encodeURIComponent(cat)}`;
+                pdfBtn.innerHTML = `<i class="fas fa-file-pdf"></i> Download Report (${cat})`;
+            } else {
+                pdfBtn.href = `http://localhost:5000/export/pdf`;
+                pdfBtn.innerHTML = `<i class="fas fa-file-pdf"></i> Download Summary Report`;
+            }
+
+            // Populate Table
+            const tbody = document.querySelector('tbody');
+            tbody.innerHTML = ''; // clear hardcoded
+
+            // Show only Top 5 consistently
+            alts.slice(0, 5).forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${item.material_name}</td>
+            <td>${item.predicted_cost}</td>
+            <td>${item.predicted_co2}</td>
+            <td>${item.bio_score ? item.bio_score + '/10' : '-'}</td>
+            <td>${item.recycle_percent ? item.recycle_percent + '%' : '-'}</td>
+            <td class="fw-bold">${item.score ? item.score : '-'}</td>
+            <td class="${index === 0 ? 'text-success fw-bold' : ''}">${item.effectiveness}</td>
+        `;
+                tbody.appendChild(tr);
+            });
+
+            // Prepare Chart Data (Top 5 Only)
+            const top5 = alts.slice(0, 5);
+            const labels = top5.map(a => a.material_name);
+            const costs = top5.map(a => a.predicted_cost);
+            const co2s = top5.map(a => a.predicted_co2);
+
+            // Cost Chart (Plotly)
+            const costTrace = {
+                x: labels,
+                y: costs,
+                type: 'bar',
+                marker: { color: 'rgba(25, 135, 84, 0.7)', line: { color: 'rgba(25, 135, 84, 1)', width: 1.5 } }
+            };
+
+            const costLayout = {
+                margin: { t: 10, b: 30, l: 40, r: 10 },
+                xaxis: { title: 'Material' },
+                yaxis: { title: 'Cost (INR)' }
+            };
+
+            Plotly.newPlot('costChart', [costTrace], costLayout, { displayModeBar: false });
+
+            // CO2 Chart (Plotly)
+            const co2Trace = {
+                x: labels,
+                y: co2s,
+                type: 'bar',
+                marker: { color: 'rgba(13, 202, 240, 0.7)', line: { color: 'rgba(13, 202, 240, 1)', width: 1.5 } }
+            };
+
+            const co2Layout = {
+                margin: { t: 10, b: 30, l: 40, r: 10 },
+                xaxis: { title: 'Material' },
+                yaxis: { title: 'CO₂ (kg)' }
+            };
+
+            Plotly.newPlot('co2Chart', [co2Trace], co2Layout, { displayModeBar: false });
+
+            // --- SUSTAINABILITY SCORE CHART ---
+            const scores = top5.map(a => a.score);
+            const scoreTrace = {
+                x: labels,
+                y: scores,
+                type: 'bar',
+                marker: { color: '#ffc107', line: { color: '#ffb300', width: 1.5 } }
+            };
+            const scoreLayout = {
+                margin: { t: 10, b: 30, l: 40, r: 10 },
+                xaxis: { title: 'Material' },
+                yaxis: { title: 'Score (0-100)' }
+            };
+            Plotly.newPlot('scoreChart', [scoreTrace], scoreLayout, { displayModeBar: false });
+
+            // --- BIO vs RECYCLE CHART (Grouped Bar) ---
+            const bios = top5.map(a => (a.bio_score || 0) * 10); // Scale 1-10 to 10-100
+            const recycles = top5.map(a => (a.recycle_percent || 0));
+
+            const bioTrace = {
+                x: labels,
+                y: bios,
+                name: 'Bio-degradability (Scaled)',
+                type: 'bar',
+                marker: { color: '#8bc34a' }
+            };
+            const recycleTrace = {
+                x: labels,
+                y: recycles,
+                name: 'Recyclability %',
+                type: 'bar',
+                marker: { color: '#2e7d32' }
+            };
+
+            const attrLayout = {
+                barmode: 'group',
+                margin: { t: 10, b: 30, l: 40, r: 10 },
+                xaxis: { title: 'Material' },
+                yaxis: { title: 'Score / %', range: [0, 100] },
+                legend: { orientation: 'h', y: 1.1 }
+            };
+            Plotly.newPlot('bioRecycleChart', [bioTrace, recycleTrace], attrLayout, { displayModeBar: false });
+
+        } else {
+            alert("No results found. Redirecting to home.");
+            window.location.href = "index.html";
+        }
+    </script>
+
+</body>
+
+</html>
