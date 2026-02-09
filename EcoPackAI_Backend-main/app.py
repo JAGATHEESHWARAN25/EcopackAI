@@ -89,6 +89,18 @@ def debug_db():
         if 'product_requests' in tables:
             cur.execute("SELECT COUNT(*) FROM product_requests")
             row_count = cur.fetchone()[0]
+            
+            # TRY INSERTING FROM APP
+            try:
+                cur.execute("INSERT INTO product_requests (product_category) VALUES ('APP_DEBUG_TEST') RETURNING request_id")
+                new_id = cur.fetchone()[0]
+                conn.commit()
+                write_status = f"SUCCESS (Inserted ID: {new_id})"
+            except Exception as e:
+                conn.rollback()
+                write_status = f"FAILED: {str(e)}"
+        else:
+            write_status = "Skipped (Table not found)"
         
         conn.close()
 
@@ -97,7 +109,8 @@ def debug_db():
             "env_var_preview": masked_url,
             "connection": "SUCCESS",
             "tables_found": tables,
-            "product_requests_count": row_count
+            "product_requests_count": row_count,
+            "write_permission_test": write_status
         })
     except Exception as e:
         return jsonify({"critical_error": str(e)})

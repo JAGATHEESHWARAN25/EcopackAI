@@ -191,6 +191,14 @@
 
         if (storedData) {
             const data = JSON.parse(storedData);
+
+            if (data.db_error) {
+                const errDiv = document.createElement('div');
+                errDiv.className = 'alert alert-warning text-center';
+                errDiv.innerHTML = `<strong>Warning:</strong> Result calculated but failed to save to Database.<br><small>${data.db_error}</small>`;
+                document.querySelector('.container').prepend(errDiv);
+            }
+
             const top = data.top_choice;
             const alts = data.alternatives;
 
