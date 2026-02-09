@@ -200,7 +200,7 @@ def recommend_material():
             
             sustainability_contribution = base_sustain * suitability_score
             raw_score = sustainability_contribution - cost_impact - co2_impact
-            final_score = max(10, min(99, raw_score + 10))
+            final_score = float(max(10, min(99, raw_score + 10))) 
             
             eff = "Standard"
             if final_score > 80: eff = "Best Overall"
