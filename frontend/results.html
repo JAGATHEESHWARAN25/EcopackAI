@@ -192,15 +192,6 @@
         if (storedData) {
             const data = JSON.parse(storedData);
 
-            if (data.db_error || data.debug_log) {
-                const errDiv = document.createElement('div');
-                errDiv.className = 'alert alert-info';
-                errDiv.style.maxHeight = '200px';
-                errDiv.style.overflowY = 'scroll';
-                errDiv.innerHTML = `<strong>Server Debug Info:</strong><br><small>${data.db_error ? '<span class="text-danger">DB Error: ' + data.db_error + '</span><br>' : ''}</small><pre style="font-size:10px">${JSON.stringify(data.debug_log, null, 2)}</pre>`;
-                document.querySelector('.container').prepend(errDiv);
-            }
-
             const top = data.top_choice;
             const alts = data.alternatives;
 

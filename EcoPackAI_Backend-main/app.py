@@ -65,55 +65,7 @@ def home():
     frontend_dir = os.path.join(BASE_DIR, '../frontend')
     return send_from_directory(frontend_dir, 'index.html')
 
-@app.route("/debug-db")
-def debug_db():
-    try:
-        db_url = os.environ.get('DATABASE_URL')
-        status = "Found" if db_url else "MISSING (Using Localhost?)"
-        masked_url = db_url[:20] + "..." if db_url else "N/A"
-        
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({
-                "env_var_status": status,
-                "env_var_preview": masked_url,
-                "connection": "FAILED",
-                "error": "Could not connect. Check credentials."
-            })
-        
-        cur = conn.cursor()
-        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
-        tables = [row[0] for row in cur.fetchall()]
-        
-        row_count = 0
-        if 'product_requests' in tables:
-            cur.execute("SELECT COUNT(*) FROM product_requests")
-            row_count = cur.fetchone()[0]
-            
-            # TRY INSERTING FROM APP
-            try:
-                cur.execute("INSERT INTO product_requests (product_category) VALUES ('APP_DEBUG_TEST') RETURNING request_id")
-                new_id = cur.fetchone()[0]
-                conn.commit()
-                write_status = f"SUCCESS (Inserted ID: {new_id})"
-            except Exception as e:
-                conn.rollback()
-                write_status = f"FAILED: {str(e)}"
-        else:
-            write_status = "Skipped (Table not found)"
-        
-        conn.close()
 
-        return jsonify({
-            "env_var_status": status,
-            "env_var_preview": masked_url,
-            "connection": "SUCCESS",
-            "tables_found": tables,
-            "product_requests_count": row_count,
-            "write_permission_test": write_status
-        })
-    except Exception as e:
-        return jsonify({"critical_error": str(e)})
 
 @app.route("/<path:path>")
 def serve_static(path):
@@ -140,15 +92,12 @@ ALL_CANDIDATES = [
 # -----------------------
 @app.route("/recommend-material", methods=["POST"])
 def recommend_material():
-    debug_log = []
     try:
-        debug_log.append("1. Endpoint hit")
         if not rf_cost:
-            return jsonify({"status": "error", "message": "ML Models not loaded", "debug_log": debug_log}), 500
+            return jsonify({"status": "error", "message": "ML Models not loaded"}), 500
 
         data = request.json
-        debug_log.append(f"2. Data received: {str(data)}")
-
+        
         # Extract features from frontend
         category = data.get("category", "Electronics")
         weight = float(data.get("weight", 0))
@@ -157,7 +106,6 @@ def recommend_material():
         fmt = data.get("format", "Box")
         protection = float(data.get("protection", 5))
         bulkiness = float(data.get("bulkiness", 1.0))
-        debug_log.append("3. Inputs parsed")
 
         # Encode categorical features
         try:
@@ -170,9 +118,7 @@ def recommend_material():
                 fmt_enc = le_fmt.transform([fmt])[0]
             else:
                 fmt_enc = 0
-            debug_log.append("4. Encoding done")
         except Exception as e:
-            debug_log.append(f"ERROR Encoding: {e}")
             cat_enc = 0
             fmt_enc = 0
 
@@ -200,7 +146,7 @@ def recommend_material():
             
             sustainability_contribution = base_sustain * suitability_score
             raw_score = sustainability_contribution - cost_impact - co2_impact
-            final_score = float(max(10, min(99, raw_score + 10))) 
+            final_score = float(max(10, min(99, raw_score + 10)))
             
             eff = "Standard"
             if final_score > 80: eff = "Best Overall"
@@ -219,7 +165,6 @@ def recommend_material():
             
         recommendations.sort(key=lambda x: x['score'], reverse=True)
         top_recommendation = recommendations[0]
-        debug_log.append("5. Prediction complete")
 
         # Database Save
         request_id = None
@@ -227,7 +172,6 @@ def recommend_material():
         
         conn = get_db_connection()
         if conn:
-            debug_log.append("6. DB Connected")
             try:
                 cur = conn.cursor()
                 
@@ -239,7 +183,6 @@ def recommend_material():
                 """, (category, weight, price, fmt, protection, bulkiness, shelf_life))
                 
                 request_id = cur.fetchone()[0]
-                debug_log.append(f"7. Request Saved (ID: {request_id})")
                 
                 # 2. Insert Prediction
                 cur.execute("""
@@ -251,26 +194,23 @@ def recommend_material():
                 conn.commit()
                 cur.close()
                 conn.close()
-                debug_log.append("8. Prediction Saved & Commit")
+                print(f"✅ Data saved to DB (Request ID: {request_id})")
             except Exception as e:
                 db_error = str(e)
-                debug_log.append(f"ERROR DB Save: {e}")
+                print(f"ERROR DB Save: {e}")
                 if conn: conn.rollback()
-        else:
-            debug_log.append("ERROR: DB Connection failed")
 
         return jsonify({
             "status": "success",
             "request_id": request_id,
             "db_error": db_error,
-            "debug_log": debug_log, # Send trace to frontend
             "top_choice": top_recommendation,
             "alternatives": recommendations
         })
 
     except Exception as e:
         print(f"❌ Error: {e}")
-        return jsonify({"status": "error", "message": str(e), "debug_log": debug_log}), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 # -----------------------
