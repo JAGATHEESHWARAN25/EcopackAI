@@ -140,16 +140,16 @@ ALL_CANDIDATES = [
 # -----------------------
 @app.route("/recommend-material", methods=["POST"])
 def recommend_material():
+    debug_log = []
     try:
+        debug_log.append("1. Endpoint hit")
         if not rf_cost:
-            return jsonify({"status": "error", "message": "ML Models not loaded"}), 500
+            return jsonify({"status": "error", "message": "ML Models not loaded", "debug_log": debug_log}), 500
 
         data = request.json
-        print(f"📩 Received data: {data}")
+        debug_log.append(f"2. Data received: {str(data)}")
 
         # Extract features from frontend
-        # Expected: category, weight, price, shelf_life, format, protection, bulkiness
-        
         category = data.get("category", "Electronics")
         weight = float(data.get("weight", 0))
         price = float(data.get("price", 0))
@@ -157,103 +157,55 @@ def recommend_material():
         fmt = data.get("format", "Box")
         protection = float(data.get("protection", 5))
         bulkiness = float(data.get("bulkiness", 1.0))
+        debug_log.append("3. Inputs parsed")
 
         # Encode categorical features
         try:
-            # Handle unseen labels safely
             if category in le_cat.classes_:
                 cat_enc = le_cat.transform([category])[0]
             else:
-                cat_enc = 0 # Default/Fallback
-                
+                cat_enc = 0 
+            
             if fmt in le_fmt.classes_:
                 fmt_enc = le_fmt.transform([fmt])[0]
             else:
-                fmt_enc = 0 
+                fmt_enc = 0
+            debug_log.append("4. Encoding done")
         except Exception as e:
-            print(f"⚠️ Encoding Error: {e}")
+            debug_log.append(f"ERROR Encoding: {e}")
             cat_enc = 0
             fmt_enc = 0
-            
-        # We need to predict for DIFFERENT materials to recommend the best one.
-        # Let's consider a few standard material profiles to simulate recommendations.
-        # In a real scenario, we would query the materials database.
-        # For now, we will statically define 3 candidate materials with distinct properties.
-        
-        # candidates with diverse properties
-        
+
+        # Create candidates...
         recommendations = []
-        
         for cand in ALL_CANDIDATES:
-            # 1. Suitability Check
-            # If the category isn't explicitly suitable, apply a penalty or skip
-            # For simplicity, we'll apply a heavy score penalty if not suitable
             suitability_score = 1.0
             if category not in cand.get("suitable_for", []) and "All" not in cand.get("suitable_for", []):
-                # Check for broad matches
                 if category == "Food" and cand["type"] in ["Bioplastic", "Glass", "Metal", "Flexible"]:
                     suitability_score = 0.9
                 elif category == "Electronics" and cand["type"] == "Paper":
                     suitability_score = 1.0
                 else:
-                    suitability_score = 0.4 # Heavy penalty for unsuitable matches
+                    suitability_score = 0.4
             
-            # Prepare features
-            features = np.array([
-                cat_enc,
-                weight,
-                price,
-                protection,
-                bulkiness,
-                shelf_life,
-                fmt_enc,
-                cand['strength'],
-                cand['bio'],
-                cand['recycle']
-            ]).reshape(1, -1)
+            features = np.array([cat_enc, float(weight), float(price), float(protection), float(shelf_life), float(bulkiness), fmt_enc, 
+                               cand['strength'], cand['bio'], cand['recycle']]).reshape(1, -1)
             
-            # Predict
-            pred_cost = float(rf_cost.predict(features)[0])
-            pred_co2 = float(rf_co2.predict(features)[0])
+            pred_cost = max(0.1, float(rf_cost.predict(features)[0]))
+            pred_co2 = max(0.001, float(rf_co2.predict(features)[0]))
             
-            # Handle potential negative predictions from regression
-            pred_cost = max(0.1, pred_cost)
-            pred_co2 = max(0.001, pred_co2)
-            
-            # Calculate Environmental Score
-            # Normalize inputs roughly:
-            # Bio (0-10), Recycle (0-100) -> Base Sustain: 0-100
             base_sustain = (cand['bio'] * 10 + cand['recycle']) / 2
+            cost_impact = np.log1p(pred_cost) * 15
+            co2_impact = np.log1p(pred_co2 * 100) * 20
             
-            # Impact Metrics (lower is better)
-            # CO2: 0.1kg is "high" for small package, 5kg is high for large.
-            # Cost: relative to product price?
-            
-            # We want to reward low CO2 and low Cost
-            # Score = Base * Suitability - (Impacts)
-            
-            # Dynamic weighting based on input weight (heavier items generate more CO2/Cost)
-            # Use logarithmic scaling for impact to prevent dominance
-            # UPDATED: Increased CO2/Cost penalty weights to balance against raw material scores
-            cost_impact = np.log1p(pred_cost) * 15 # Was 10
-            co2_impact = np.log1p(pred_co2 * 100) * 20 # Was 15
-            
-            # Score calculation
             sustainability_contribution = base_sustain * suitability_score
             raw_score = sustainability_contribution - cost_impact - co2_impact
+            final_score = max(10, min(99, raw_score + 10))
             
-            # Normalize manually to 0-100 range roughly
-            final_score = max(10, min(99, raw_score + 10)) 
-            
-            # Determine Effectiveness Label
-            if final_score > 80:
-                eff = "Best Overall"
-            elif pred_co2 < 0.1 and final_score > 60:
-                eff = "Eco-Friendly"
-            elif pred_cost < 15 and final_score > 50:
-                 eff = "Cost-Saver"
-            else:
-                eff = "Standard"
+            eff = "Standard"
+            if final_score > 80: eff = "Best Overall"
+            elif pred_co2 < 0.1 and final_score > 60: eff = "Eco-Friendly"
+            elif pred_cost < 15 and final_score > 50: eff = "Cost-Saver"
             
             recommendations.append({
                 "material_name": cand["name"],
@@ -264,14 +216,18 @@ def recommend_material():
                 "bio_score": cand["bio"],
                 "recycle_percent": cand["recycle"]
             })
-
-        # Sort by score descending
+            
         recommendations.sort(key=lambda x: x['score'], reverse=True)
         top_recommendation = recommendations[0]
+        debug_log.append("5. Prediction complete")
 
-        # ---------- Database Save (Structured) ----------
+        # Database Save
+        request_id = None
+        db_error = None
+        
         conn = get_db_connection()
         if conn:
+            debug_log.append("6. DB Connected")
             try:
                 cur = conn.cursor()
                 
@@ -283,6 +239,7 @@ def recommend_material():
                 """, (category, weight, price, fmt, protection, bulkiness, shelf_life))
                 
                 request_id = cur.fetchone()[0]
+                debug_log.append(f"7. Request Saved (ID: {request_id})")
                 
                 # 2. Insert Prediction
                 cur.execute("""
@@ -294,22 +251,26 @@ def recommend_material():
                 conn.commit()
                 cur.close()
                 conn.close()
-                print(f"✅ Data saved to DB (Request ID: {request_id})")
+                debug_log.append("8. Prediction Saved & Commit")
             except Exception as e:
-                print(f"⚠️ Failed to save to DB: {e}")
+                db_error = str(e)
+                debug_log.append(f"ERROR DB Save: {e}")
                 if conn: conn.rollback()
+        else:
+            debug_log.append("ERROR: DB Connection failed")
 
         return jsonify({
             "status": "success",
-            "request_id": request_id if 'request_id' in locals() else None,
-            "db_error": str(e) if 'e' in locals() else None, # Debug info
+            "request_id": request_id,
+            "db_error": db_error,
+            "debug_log": debug_log, # Send trace to frontend
             "top_choice": top_recommendation,
             "alternatives": recommendations
         })
 
     except Exception as e:
         print(f"❌ Error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": str(e), "debug_log": debug_log}), 500
 
 
 # -----------------------
