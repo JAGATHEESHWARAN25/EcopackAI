@@ -65,6 +65,43 @@ def home():
     frontend_dir = os.path.join(BASE_DIR, '../frontend')
     return send_from_directory(frontend_dir, 'index.html')
 
+@app.route("/debug-db")
+def debug_db():
+    try:
+        db_url = os.environ.get('DATABASE_URL')
+        status = "Found" if db_url else "MISSING (Using Localhost?)"
+        masked_url = db_url[:20] + "..." if db_url else "N/A"
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({
+                "env_var_status": status,
+                "env_var_preview": masked_url,
+                "connection": "FAILED",
+                "error": "Could not connect. Check credentials."
+            })
+        
+        cur = conn.cursor()
+        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
+        tables = [row[0] for row in cur.fetchall()]
+        
+        row_count = 0
+        if 'product_requests' in tables:
+            cur.execute("SELECT COUNT(*) FROM product_requests")
+            row_count = cur.fetchone()[0]
+        
+        conn.close()
+
+        return jsonify({
+            "env_var_status": status,
+            "env_var_preview": masked_url,
+            "connection": "SUCCESS",
+            "tables_found": tables,
+            "product_requests_count": row_count
+        })
+    except Exception as e:
+        return jsonify({"critical_error": str(e)})
+
 @app.route("/<path:path>")
 def serve_static(path):
     frontend_dir = os.path.join(BASE_DIR, '../frontend')
@@ -252,6 +289,7 @@ def recommend_material():
         return jsonify({
             "status": "success",
             "request_id": request_id if 'request_id' in locals() else None,
+            "db_error": str(e) if 'e' in locals() else None, # Debug info
             "top_choice": top_recommendation,
             "alternatives": recommendations
         })
