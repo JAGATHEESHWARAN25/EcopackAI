@@ -61,11 +61,14 @@ def get_db_connection():
 # -----------------------
 @app.route("/", methods=["GET"])
 def home():
-    return send_from_directory('../frontend', 'index.html')
+    # Helper to get absolute path to frontend
+    frontend_dir = os.path.join(BASE_DIR, '../frontend')
+    return send_from_directory(frontend_dir, 'index.html')
 
 @app.route("/<path:path>")
 def serve_static(path):
-    return send_from_directory('../frontend', path)
+    frontend_dir = os.path.join(BASE_DIR, '../frontend')
+    return send_from_directory(frontend_dir, path)
 
 # -----------------------
 # Global Data
