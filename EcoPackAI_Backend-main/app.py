@@ -5,7 +5,7 @@ import numpy as np
 import psycopg2
 import os
 import io
-from flask import send_file
+from flask import send_file, send_from_directory
 from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -40,13 +40,17 @@ except Exception as e:
 # -----------------------
 def get_db_connection():
     try:
-        conn = psycopg2.connect(
-            dbname="ecopackai",
-            user="postgres",
-            password="Jaga@123", # Updated password
-            host="localhost",
-            port="5432"
-        )
+        db_url = os.environ.get('DATABASE_URL')
+        if db_url:
+             conn = psycopg2.connect(db_url)
+        else:
+            conn = psycopg2.connect(
+                dbname="ecopackai",
+                user="postgres",
+                password="Jaga@123", # Updated password
+                host="localhost",
+                port="5432"
+            )
         return conn
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
@@ -57,7 +61,11 @@ def get_db_connection():
 # -----------------------
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"message": "EcoPackAI Backend is running 🚀"})
+    return send_from_directory('../frontend', 'index.html')
+
+@app.route("/<path:path>")
+def serve_static(path):
+    return send_from_directory('../frontend', path)
 
 # -----------------------
 # Global Data
@@ -791,4 +799,5 @@ def dataset_info():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)

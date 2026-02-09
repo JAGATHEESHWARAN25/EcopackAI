@@ -187,7 +187,7 @@
 
             setTimeout(async () => { // Fake delay for UX feel (optional, can remove)
                 try {
-                    const response = await fetch('http://localhost:5000/recommend-material', {
+                    const response = await fetch('/recommend-material', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(data)

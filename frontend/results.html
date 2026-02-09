@@ -224,15 +224,15 @@
             const pdfBtn = document.getElementById('downloadPdfBtn');
             if (data.request_id) {
                 const rid = data.request_id;
-                pdfBtn.href = `http://localhost:5000/export/pdf?request_id=${rid}`;
+                pdfBtn.href = `/export/pdf?request_id=${rid}`;
                 pdfBtn.innerHTML = `<i class="fas fa-file-pdf"></i> Download Detailed Report`;
             } else if (data.input && data.input.category) {
                 // Legacy fallback if no request_id
                 const cat = data.input.category;
-                pdfBtn.href = `http://localhost:5000/export/pdf?category=${encodeURIComponent(cat)}`;
+                pdfBtn.href = `/export/pdf?category=${encodeURIComponent(cat)}`;
                 pdfBtn.innerHTML = `<i class="fas fa-file-pdf"></i> Download Report (${cat})`;
             } else {
-                pdfBtn.href = `http://localhost:5000/export/pdf`;
+                pdfBtn.href = `/export/pdf`;
                 pdfBtn.innerHTML = `<i class="fas fa-file-pdf"></i> Download Summary Report`;
             }
 

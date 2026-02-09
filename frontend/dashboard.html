@@ -140,7 +140,7 @@
     <script>
         async function loadAnalytics() {
             try {
-                const response = await fetch('http://localhost:5000/analytics');
+                const response = await fetch('/analytics');
                 const data = await response.json();
 
                 if (data.status === 'success') {
@@ -224,7 +224,7 @@
 
         async function loadCapabilities() {
             try {
-                const response = await fetch('http://localhost:5000/api/dataset-info');
+                const response = await fetch('/api/dataset-info');
                 const data = await response.json();
 
                 if (data.status === 'success') {
