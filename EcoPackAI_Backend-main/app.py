@@ -280,12 +280,12 @@ def get_impact_trends(cur):
         # Fetch monthly savings (simulated as sum of predicted_co2 for simplicity)
         # Groups by Month Name (Jan, Feb...) and orders chronologically by Month Number
         cur.execute("""
-            SELECT TO_CHAR(pr.request_timestamp, 'Mon') as month_name, 
+            SELECT TO_CHAR(pr.created_at, 'Mon') as month_name, 
                    SUM(ap.predicted_co2) as monthly_savings
             FROM ai_predictions ap
             JOIN product_requests pr ON ap.request_id = pr.request_id
-            GROUP BY TO_CHAR(pr.request_timestamp, 'Mon'), DATE_PART('month', pr.request_timestamp)
-            ORDER BY DATE_PART('month', pr.request_timestamp);
+            GROUP BY TO_CHAR(pr.created_at, 'Mon'), DATE_PART('month', pr.created_at)
+            ORDER BY DATE_PART('month', pr.created_at);
         """)
         results = cur.fetchall()
         
@@ -316,7 +316,7 @@ def export_excel():
                    ap.recommended_material, ap.predicted_cost, ap.predicted_co2, ap.sustainability_score
             FROM product_requests pr
             JOIN ai_predictions ap ON pr.request_id = ap.request_id
-            ORDER BY pr.request_timestamp DESC;
+            ORDER BY pr.created_at DESC;
         """)
         rows = cur.fetchall()
         
